@@ -15,27 +15,38 @@ const getDBConnection = async () => {
 // Create
 const createProductController = async (request, response) => {
   const connection = await getDBConnection()
+  const { nome, preco } = request.body
+  try {
+    const results = await connection.promise().query(
+      `INSERT INTO tb_produto (nome, preco) 
+          VALUES (?, ?)`,
+      [nome, preco]
+    )
+  
+    console.log(results)
+  
+      response.json('Seu produto foi adicionado com sucesso!')
+    
+  } catch (error) {
+    response.json('Erro!')
+  }
 
-  const [results, fields] = await connection.query(
-    `INSERT INTO tb_produto (nome, preco) VALUES('Adidas', 100.00)`
-  )
 
-  console.log(results);
-
-    response.json('Seu produto foi adicionado com sucesso!')
   }
 
 //Show
 const showProductController = async (request, response) => {
-  const selectedProduct = products
-    .find(p => p.id === request.params.productId)
-
-  if (selectedProduct) {
-    response.json(selectedProduct)
-  } else {
-    response.status(404)
-    response.json({
-      error: 'Produto não encontrado'
+  try {
+    const {id} = request.params
+    const data = await connection.promise().query(
+      `SELECT * from tb_produto where id = ?`,[id]
+    )
+    response.status(200).json({
+      user: data[0][0],
+    })
+  } catch (err) {
+    response.status(500).json({
+      message: err,
     })
   }
 }
@@ -81,7 +92,7 @@ const updateProductController = async (request, response) => {
 
   const [results, fields] = await connection.query(
     `UPDATE tb_produto set nome = ?, preco = ? where id = ${id}`,
-    [ nome, preco,id]
+    [ nome, preco, id]
   )
 
   console.log(results);
